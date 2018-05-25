@@ -1,0 +1,15 @@
+{
+    "type": "record",
+    "namespace": "roure.avro",
+    "name": "comment",
+    "fields": [
+        {"name": "parentid", "type": "string", "default":"NONE"},
+	{"name": "id", "type": "string", "default":"NONE"},
+	{"name": "replayid", "type": "string", "default":"NONE"},
+	{"name": "name", "type": "string","default":"NONE"},
+	{"name": "uts", "type": "long","default":1527209139},
+	{"name": "host", "type": "string","default":"NONE"},
+	{"name": "fingerprint", "type": "string","default":"NONE"},
+	{"name": "message", "type": "string","default":"NONE"}
+    ]
+}

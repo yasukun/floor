@@ -3,8 +3,8 @@
     "namespace": "roure.avro",
     "name": "post",
     "fields": [
-	{"name": "xid", "type": "string","default":"NONE"},
-	{"name": "topic", "type": "string","default":"NONE"},
+	{"name": "id", "type": "string","default":"NONE"},
+	{"name": "category", "type": "string","default":"NONE"},
 	{"name": "name", "type": "string","default":"NONE"},
 	{"name": "uts", "type": "long","default":1527209139},
 	{"name": "host", "type": "string","default":"NONE"},
