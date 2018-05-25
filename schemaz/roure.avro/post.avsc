@@ -1,0 +1,27 @@
+{
+    "type": "record",
+    "namespace": "roure.avro",
+    "name": "post",
+    "fields": [
+	{"name": "xid", "type": "string","default":"NONE"},
+	{"name": "topic", "type": "string","default":"NONE"},
+	{"name": "name", "type": "string","default":"NONE"},
+	{"name": "uts", "type": "long","default":1527209139},
+	{"name": "host", "type": "string","default":"NONE"},
+	{"name": "fingerprint", "type": "string","default":"NONE"},
+	{"name": "url", "type": "string","default":"NONE"},
+	{"name": "subject", "type": "string","default":"NONE"},
+	{"name": "tags", "type": {"type": "array",
+				  "items": {"type": "record",
+					    "name": "tag",
+					    "fields": [
+						{"name": "name", "type": "string", "default": "NONE"}
+					    ]}}},
+	{"name": "images", "type": {"type": "array",
+				    "items": {"type": "record",
+					      "name": "image",
+					      "fields": [
+						  {"name": "src", "type": "string", "default": "NONE"}
+					      ]}}}
+    ]
+}
