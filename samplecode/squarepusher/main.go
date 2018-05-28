@@ -39,7 +39,7 @@ type PostData struct {
 
 var addr = flag.String("a", "localhost:9092", "kafka address")
 var topic = flag.String("t", "roure.avro.post", "kafka topic")
-var partition = flag.Int("p", 0, "topic partition")
+var partition = flag.Int("p", 1, "topic partition")
 
 func main() {
 	flag.Parse()
@@ -54,6 +54,7 @@ func main() {
 	}
 
 	rand.Seed(time.Now().UnixNano())
+	keys := []string{"news", "program", "music"}
 	fingers := []string{"finger1", "finger2", "finger3"}
 	host := []string{"host1", "host2", "host3"}
 	subjects := []string{"subjects1", "subjects2", "subjects3"}
@@ -61,20 +62,35 @@ func main() {
 	tags = append(tags, Tag{Name: "kenmo"})
 	tags = append(tags, Tag{Name: "zatsudan"})
 	images := []Image{}
-	//conn, err := kafka.DialContext(context.Background(), "tcp", *addr)
-	conn, err := kafka.DialLeader(context.Background(), "tcp", *addr, *topic, *partition)
-	if err != nil {
-		log.Fatalln(err)
+	conn, err := kafka.DialContext(context.Background(), "tcp", *addr)
+	// conn, err := kafka.DialLeader(context.Background(), "tcp", *addr, *topic, *partition)
+	// if err != nil {
+	// 	log.Fatalln("DialLeader error: ", err)
+	// }
+
+	topicConfig := kafka.TopicConfig{Topic: *topic, NumPartitions: *partition, ReplicationFactor: 1}
+	if err = conn.CreateTopics(topicConfig); err != nil {
+		log.Fatalln("createTopics error: ", err)
 	}
-	conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
-	for i := 0; i < 1000; i++ {
+	conn.Close()
+
+	// conn.SetWriteDeadline(time.Now().Add(10 * time.Second))
+	w := kafka.NewWriter(kafka.WriterConfig{
+		Brokers:      []string{*addr},
+		Topic:        *topic,
+		Balancer:     &kafka.Hash{},
+		RequiredAcks: 0,
+	})
+	ctx := context.Background()
+	msgs := []kafka.Message{}
+	for i := 0; i < 100000; i++ {
 
 		guid := xid.New()
 		uts := time.Now().Unix()
 		r := rand.Intn(3)
 		p := PostData{
 			Xid:         guid.String(),
-			Topic:       "news",
+			Topic:       keys[r],
 			Name:        "774",
 			Uts:         uts,
 			Host:        host[r],
@@ -97,11 +113,16 @@ func main() {
 		if err != nil {
 			log.Fatalln(err)
 		}
-		conn.WriteMessages(kafka.Message{
-			Key:   []byte("news"),
+		msgs = append(msgs, kafka.Message{
+			Key:   []byte(keys[r]),
 			Value: binary,
 		})
-
+		// w.WriteMessages(ctx, kafka.Message{
+		// 	Key:   []byte(keys[r]),
+		// 	Value: binary,
+		// })
+		// w.Close()
 	}
-	conn.Close()
+	w.WriteMessages(ctx, msgs...)
+	w.Close()
 }
