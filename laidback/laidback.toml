@@ -1,5 +1,5 @@
 [main]
-update_offset_wait = 10
+update_offset_wait = 1
 
 [kafka]
 topic = "roure.avro.subject"
