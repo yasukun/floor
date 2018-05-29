@@ -1,7 +1,7 @@
 {
     "type": "record",
     "namespace": "roure.avro",
-    "name": "post",
+    "name": "subject",
     "fields": [
 	{"name": "id", "type": "string","default":"NONE"},
 	{"name": "category", "type": "string","default":"NONE"},
@@ -10,7 +10,7 @@
 	{"name": "host", "type": "string","default":"NONE"},
 	{"name": "fingerprint", "type": "string","default":"NONE"},
 	{"name": "url", "type": "string","default":"NONE"},
-	{"name": "subject", "type": "string","default":"NONE"},
+	{"name": "body", "type": "string","default":"NONE"},
 	{"name": "tags", "type": {"type": "array",
 				  "items": {"type": "record",
 					    "name": "tag",
