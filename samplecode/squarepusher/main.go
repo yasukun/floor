@@ -24,26 +24,28 @@ type Image struct {
 	Src string `json:"src"`
 }
 
-type PostData struct {
-	Xid         string  `json:"xid"`
-	Topic       string  `json:"topic"`
+type Subject struct {
+	Id          string  `json:"id"`
+	Category    string  `json:"category"`
 	Name        string  `json:"name"`
 	Uts         int64   `json:"uts"`
 	Host        string  `json:"host"`
 	FingerPrint string  `json:"fingerprint"`
-	Subject     string  `json:"subject"`
+	Body        string  `json:"body"`
 	Url         string  `json:"url"`
+	Prefix      string  `json:"prefix"`
+	Redis       string  `json:"redis"`
 	Tags        []Tag   `json:"tags"`
 	Images      []Image `json:"images"`
 }
 
 var addr = flag.String("a", "localhost:9092", "kafka address")
-var topic = flag.String("t", "roure.avro.post", "kafka topic")
+var topic = flag.String("t", "roure.avro.subject", "kafka topic")
 var partition = flag.Int("p", 1, "topic partition")
 
 func main() {
 	flag.Parse()
-	postscheme, err := Asset("roure.avro/post.avsc")
+	postscheme, err := Asset("roure.avro/subject.avsc")
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -57,7 +59,7 @@ func main() {
 	keys := []string{"news", "program", "music"}
 	fingers := []string{"finger1", "finger2", "finger3"}
 	host := []string{"host1", "host2", "host3"}
-	subjects := []string{"subjects1", "subjects2", "subjects3"}
+	body := []string{"subjects1", "subjects2", "subjects3"}
 	tags := []Tag{}
 	tags = append(tags, Tag{Name: "kenmo"})
 	tags = append(tags, Tag{Name: "zatsudan"})
@@ -83,20 +85,22 @@ func main() {
 	})
 	ctx := context.Background()
 	msgs := []kafka.Message{}
-	for i := 0; i < 100000; i++ {
+	for i := 0; i < 1000; i++ {
 
 		guid := xid.New()
 		uts := time.Now().Unix()
 		r := rand.Intn(3)
-		p := PostData{
-			Xid:         guid.String(),
-			Topic:       keys[r],
+		p := Subject{
+			Id:          guid.String(),
+			Category:    keys[r],
 			Name:        "774",
 			Uts:         uts,
 			Host:        host[r],
 			FingerPrint: fingers[r],
-			Subject:     subjects[r],
+			Body:        body[r],
 			Url:         "http://google.co.jp",
+			Prefix:      "subject:",
+			Redis:       "LIST",
 			Tags:        tags,
 			Images:      images,
 		}
