@@ -1,0 +1,19 @@
+[main]
+update_offset_wait = 1
+
+[kafka]
+topic = "roure.avro.subject"
+partitions = 3
+minbytes = 10e3
+maxbytes =10e6
+
+[[kafka.broker]]
+addr = "localhost:9092"
+
+[avro]
+schema = "roure.avro/subject.avsc"
+
+[ledisdb]
+addr = "localhost:6380"
+password = ""
+db = 0
