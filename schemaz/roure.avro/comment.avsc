@@ -10,6 +10,10 @@
 	{"name": "uts", "type": "long","default":1527209139},
 	{"name": "host", "type": "string","default":"NONE"},
 	{"name": "fingerprint", "type": "string","default":"NONE"},
-	{"name": "message", "type": "string","default":"NONE"}
+	{"name": "body", "type": "string","default":"NONE"}
+	{"name": "redis_key", "type": "string", "default": "NONE"},
+	{"name": "redis", "type": {"type": "enum",
+		 	    	   "name": "command",
+				   "symbols": ["LIST", "SET", "ZADD"]}}
     ]
 }

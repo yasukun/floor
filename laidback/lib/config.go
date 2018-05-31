@@ -10,7 +10,8 @@ type Config struct {
 }
 
 type MainConfig struct {
-	UpdateOffsetWait int64 `toml:"update_offste_wait"`
+	UpdateOffsetWait int  `toml:"update_offset_wait"`
+	Debug            bool `toml:"debug"`
 }
 
 type KafkaConfig struct {

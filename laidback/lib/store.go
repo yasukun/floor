@@ -15,13 +15,24 @@ func Offset(client *redis.Client, topic string, partition int) (int64, error) {
 	field := fmt.Sprintf("%s:%d", topic, partition)
 	result, err := client.HGet(OFFSET_KEY, field).Result()
 	if err != nil {
-		return -1, err
+		return -1, errors.New(fmt.Sprintf("read offset error: %v", err))
 	}
 	i64, err := strconv.ParseInt(result, 10, 64)
 	if err != nil {
-		return -1, err
+		return -1, errors.New(fmt.Sprintf("offset convert error: %v", err))
 	}
 	return i64, nil
+}
+
+// SetOffsetNX ...
+func SetOffsetNX(client *redis.Client, topic string, partition int) error {
+	field := fmt.Sprintf("%s:%d", topic, partition)
+	if exists := client.HExists(OFFSET_KEY, field).Val(); !exists {
+		if err := SetOffset(client, topic, partition, 0); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // SetOffset ...
@@ -46,11 +57,11 @@ func storeMessage(client *redis.Client, cmd, key, body string) error {
 			return err
 		}
 	case "ZADD":
-		if err :=  client.ZIncrBy(key, 1, body).Err(); err != nil {
+		if err := client.ZIncrBy(key, 1, body).Err(); err != nil {
 			return err
 		}
 	default:
 		return errors.New(fmt.Sprintf("command no match error. [%s]", cmd))
 	}
-  return nil
+	return nil
 }

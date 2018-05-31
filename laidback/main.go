@@ -59,12 +59,20 @@ func main() {
 		DB:       conf.Ledisdb.DB,
 	})
 
+	pong, err := client.Ping().Result()
+	if err != nil {
+		log.Fatalln("ledisdb ping: ", err)
+	}
+	log.Printf("ledisdb ping: %s", pong)
+
 	wg := &sync.WaitGroup{}
 	for i := 0; i < conf.Kafka.Partitions; i++ {
+		if err := lib.SetOffsetNX(client, conf.Kafka.Topic, i); err != nil {
+			log.Fatalln("set offset if not exist error: ", err)
+		}
 		wg.Add(1)
 		go func(conf lib.Config, client *redis.Client, partition int) {
-			err := lib.ReadKafka(conf, client, codec, partition)
-			if err != nil {
+			if err := lib.ReadKafka(conf, client, codec, partition); err != nil {
 				log.Println("kafka read error:", err)
 			}
 			wg.Done()

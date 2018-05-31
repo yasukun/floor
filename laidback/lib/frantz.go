@@ -5,8 +5,6 @@ import (
 	"errors"
 	"log"
 
-	"time"
-
 	"github.com/go-redis/redis"
 	"github.com/linkedin/goavro"
 	kafka "github.com/segmentio/kafka-go"
@@ -62,29 +60,21 @@ func ReadKafka(conf Config, client *redis.Client, codec *goavro.Codec, partition
 	}
 	r.SetOffset(offset)
 
-	ch := make(chan int64)
-	go func(conf Config, client *redis.Client, partition int, offset int64) {
-		curoffset := offset
-		for {
-			select {
-			case v := <-ch:
-				curoffset = v
-			default:
-				if err = SetOffset(client, conf.Kafka.Topic, partition, curoffset); err != nil {
-					log.Println("Set offset error: ", err)
-				}
-				time.Sleep(time.Duration(conf.Main.UpdateOffsetWait) * time.Second)
-			}
-		}
-	}(conf, client, partition, offset)
 	for {
 		m, err := r.ReadMessage(context.Background())
 		if err != nil {
 			return err
 		}
+		// ch <- m.Offset
+		if err = SetOffset(client, conf.Kafka.Topic, partition, m.Offset+1); err != nil {
+			log.Println("update offset error: ", err)
+		}
 		redisKey, redisCmd, body, err := decodeMsg(codec, m)
 		if err != nil {
 			return err
+		}
+		if conf.Main.Debug {
+			log.Printf("key: %s, body: %s\n", redisKey, body)
 		}
 
 		if err = storeMessage(client, redisCmd, redisKey, body); err != nil {
