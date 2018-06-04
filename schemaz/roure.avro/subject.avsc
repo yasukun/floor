@@ -1,31 +1,121 @@
 {
-    "type": "record",
-    "namespace": "roure.avro",
-    "name": "subject",
-    "fields": [
-	{"name": "id", "type": "string","default":"NONE"},
-	{"name": "category", "type": "string","default":"NONE"},
-	{"name": "name", "type": "string","default":"NONE"},
-	{"name": "uts", "type": "long","default":1527209139},
-	{"name": "host", "type": "string","default":"NONE"},
-	{"name": "fingerprint", "type": "string","default":"NONE"},
-	{"name": "url", "type": "string","default":"NONE"},
-	{"name": "body", "type": "string","default":"NONE"},
-	{"name": "redis_key", "type": "string", "default": "NONE"},
-	{"name": "redis", "type": {"type": "enum",
-		 	    	   "name": "command",
-				   "symbols": ["LIST", "SET", "ZADD"]}},
-	{"name": "tags", "type": {"type": "array",
-				  "items": {"type": "record",
-					    "name": "tag",
-					    "fields": [
-						{"name": "name", "type": "string", "default": "NONE"}
-					    ]}}},
-	{"name": "images", "type": {"type": "array",
-				    "items": {"type": "record",
-					      "name": "image",
-					      "fields": [
-						  {"name": "src", "type": "string", "default": "NONE"}
-					      ]}}}
-    ]
+	"type": "record",
+	"namespace": "roure.avro",
+	"name": "subject",
+	"fields": [
+		{
+			"name": "id",
+			"type": "string",
+			"default": "NONE"
+		},
+		{
+			"name": "category",
+			"type": "string",
+			"default": "NONE"
+		},
+		{
+			"name": "name",
+			"type": "string",
+			"default": "NONE"
+		},
+		{
+			"name": "uts",
+			"type": "long",
+			"default": 1527209139
+		},
+		{
+			"name": "host",
+			"type": "string",
+			"default": "NONE"
+		},
+		{
+			"name": "fingerprint",
+			"type": "string",
+			"default": "NONE"
+		},
+		{
+			"name": "url",
+			"type": "string",
+			"default": "NONE"
+		},
+		{
+			"name": "body",
+			"type": "string",
+			"default": "NONE"
+		},
+		{
+			"name": "redis",
+			"type": {
+				"type": "array",
+				"items": {
+					"type": "record",
+					"name": "commands",
+					"fields": [
+						{
+							"name": "group",
+							"type": {
+								"type": "enum",
+								"name": "command",
+								"symbols": [
+									"LISTS",
+									"SETS",
+									"SORTEDSETS",
+									"HASHES"
+								]
+							}
+						},
+						{
+							"name": "key",
+							"type": "string",
+							"default": "NONE"
+						},
+						{
+							"name": "field",
+							"type": "string",
+							"default": "NONE"
+						},
+						{
+							"name": "value",
+							"type": "string",
+							"default": "NONE"
+						}
+					]
+				}
+			}
+		},
+		{
+			"name": "tags",
+			"type": {
+				"type": "array",
+				"items": {
+					"type": "record",
+					"name": "tag",
+					"fields": [
+						{
+							"name": "name",
+							"type": "string",
+							"default": "NONE"
+						}
+					]
+				}
+			}
+		},
+		{
+			"name": "images",
+			"type": {
+				"type": "array",
+				"items": {
+					"type": "record",
+					"name": "image",
+					"fields": [
+						{
+							"name": "src",
+							"type": "string",
+							"default": "NONE"
+						}
+					]
+				}
+			}
+		}
+	]
 }

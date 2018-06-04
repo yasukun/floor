@@ -1,19 +1,87 @@
 {
-    "type": "record",
-    "namespace": "roure.avro",
-    "name": "comment",
-    "fields": [
-        {"name": "subjectid", "type": "string", "default":"NONE"},
-	{"name": "id", "type": "string", "default":"NONE"},
-	{"name": "replyid", "type": "string", "default":"NONE"},
-	{"name": "name", "type": "string","default":"NONE"},
-	{"name": "uts", "type": "long","default":1527209139},
-	{"name": "host", "type": "string","default":"NONE"},
-	{"name": "fingerprint", "type": "string","default":"NONE"},
-	{"name": "body", "type": "string","default":"NONE"}
-	{"name": "redis_key", "type": "string", "default": "NONE"},
-	{"name": "redis", "type": {"type": "enum",
-		 	    	   "name": "command",
-				   "symbols": ["LIST", "SET", "ZADD"]}}
-    ]
+	"type": "record",
+	"namespace": "roure.avro",
+	"name": "comment",
+	"fields": [
+		{
+			"name": "subjectid",
+			"type": "string",
+			"default": "NONE"
+		},
+		{
+			"name": "id",
+			"type": "string",
+			"default": "NONE"
+		},
+		{
+			"name": "replyid",
+			"type": "string",
+			"default": "NONE"
+		},
+		{
+			"name": "name",
+			"type": "string",
+			"default": "NONE"
+		},
+		{
+			"name": "uts",
+			"type": "long",
+			"default": 1527209139
+		},
+		{
+			"name": "host",
+			"type": "string",
+			"default": "NONE"
+		},
+		{
+			"name": "fingerprint",
+			"type": "string",
+			"default": "NONE"
+		},
+		{
+			"name": "body",
+			"type": "string",
+			"default": "NONE"
+		},
+		{
+			"name": "redis",
+			"type": {
+				"type": "array",
+				"items": {
+					"type": "record",
+					"name": "commands",
+					"fields": [
+						{
+							"name": "group",
+							"type": {
+								"type": "enum",
+								"name": "command",
+								"symbols": [
+									"LISTS",
+									"SETS",
+									"SORTEDSETS",
+									"HASHES"
+								]
+							}
+						},
+						{
+							"name": "key",
+							"type": "string",
+							"default": "NONE"
+						},
+						{
+							"name": "field",
+							"type": "string",
+							"default": "NONE"
+						},
+						{
+							"name": "value",
+							"type": "string",
+							"default": "NONE"
+						}
+					]
+				}
+			}
+		}
+	]
 }
