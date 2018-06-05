@@ -2,7 +2,6 @@ package lib
 
 import (
 	"context"
-	"errors"
 	"log"
 
 	"github.com/go-redis/redis"
@@ -10,32 +9,49 @@ import (
 	kafka "github.com/segmentio/kafka-go"
 )
 
-// decodeMsg ...
-func decodeMsg(codec *goavro.Codec, msg kafka.Message) (redisKey, redisCommand, body string, err error) {
+type Command struct {
+	Group string
+	Key   string
+	Field string
+	From  string
+	Value string
+}
 
+// ledisCmds ...
+func ledisCmds(native *interface{}) []Command {
+	// native data example:
+	// map[redis:[map[value:test value group:LISTS key:sumbject:new field:] map[key:subject:new field:invert_idx:bcab4l2k2jbda3lsf41g value:1 group:HASHES]]]
+
+	cmds := []Command{}
+	var fields []interface{}
+	if v, ok := (*native).(map[string]interface{})["redis"]; ok {
+		fields = v.([]interface{})
+	} else {
+		// commad not exists
+		return cmds
+	}
+
+	for _, field := range fields {
+
+		cmds = append(cmds, Command{
+			Group: field.(map[string]interface{})["group"].(string),
+			Key:   field.(map[string]interface{})["key"].(string),
+			Field: field.(map[string]interface{})["field"].(string),
+			From:  field.(map[string]interface{})["from"].(string),
+			Value: field.(map[string]interface{})["value"].(string),
+		})
+	}
+	return cmds
+}
+
+// CommandExtraction ...
+func CommandExtraction(codec *goavro.Codec, msg *kafka.Message) (cmds []Command, err error) {
 	native, _, err := codec.NativeFromBinary(msg.Value)
 	if err != nil {
 		return
 	}
 
-	if v, ok := native.(map[string]interface{})["redis_key"]; ok {
-		redisKey = v.(string)
-	} else {
-		err = errors.New("key error [redis_key]")
-		return
-	}
-	if v, ok := native.(map[string]interface{})["redis"]; ok {
-		redisCommand = v.(string)
-	} else {
-		err = errors.New("key error [redis]")
-		return
-	}
-
-	textual, err := codec.TextualFromNative(nil, native)
-	if err != nil {
-		return
-	}
-	body = string(textual)
+	cmds = ledisCmds(&native)
 	return
 }
 
@@ -65,20 +81,21 @@ func ReadKafka(conf Config, client *redis.Client, codec *goavro.Codec, partition
 		if err != nil {
 			return err
 		}
-		// ch <- m.Offset
+
 		if err = SetOffset(client, conf.Kafka.Topic, partition, m.Offset+1); err != nil {
 			log.Println("update offset error: ", err)
 		}
-		redisKey, redisCmd, body, err := decodeMsg(codec, m)
+		cmds, err := CommandExtraction(codec, &m)
 		if err != nil {
 			return err
 		}
 		if conf.Main.Debug {
-			log.Printf("key: %s, body: %s\n", redisKey, body)
+			log.Printf("cmds: %s, body: %s\n", cmds, m.Value)
 		}
 
-		if err = storeMessage(client, redisCmd, redisKey, body); err != nil {
+		if err = ExecuteLedisCmds(client, &cmds, &m); err != nil {
 			return err
 		}
 	}
+	return nil
 }

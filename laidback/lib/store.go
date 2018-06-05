@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/go-redis/redis"
+	kafka "github.com/segmentio/kafka-go"
 )
 
 const OFFSET_KEY = "offset"
@@ -45,23 +46,105 @@ func SetOffset(client *redis.Client, topic string, partition int, offset int64) 
 	return nil
 }
 
-// storeMessage ...
-func storeMessage(client *redis.Client, cmd, key, body string) error {
-	switch cmd {
-	case "LIST":
-		if err := client.RPush(key, body).Err(); err != nil {
-			return err
+// ExecList ...
+func ExecList(client *redis.Client, cmd *Command, msg *kafka.Message, previousValue interface{}) (interface{}, error) {
+	var result interface{}
+	var err error
+	switch (*cmd).From {
+	case "SELF":
+		result, err = client.RPush(cmd.Key, msg.Value).Result()
+		if err != nil {
+			return result, err
 		}
-	case "SET":
-		if err := client.Set(key, body, 0).Err(); err != nil {
-			return err
+	case "PREVIOS_VALUE":
+		result, err = client.RPush(cmd.Key, previousValue).Result()
+		if err != nil {
+			return result, err
 		}
-	case "ZADD":
-		if err := client.ZIncrBy(key, 1, body).Err(); err != nil {
-			return err
+	case "VALUE":
+		result, err = client.RPush(cmd.Key, cmd.Value).Result()
+		if err != nil {
+			return result, err
 		}
-	default:
-		return errors.New(fmt.Sprintf("command no match error. [%s]", cmd))
+	}
+	return result, nil
+}
+
+// ExecHash ...
+func ExecHash(client *redis.Client, cmd *Command, msg *kafka.Message, previousValue interface{}) (interface{}, error) {
+	var result interface{}
+	var err error
+	switch (*cmd).From {
+	case "SELF":
+		result, err = client.HSet(cmd.Key, cmd.Field, msg.Value).Result()
+		if err != nil {
+			return result, err
+		}
+	case "PREVIOS_VALUE":
+		result, err = client.HSet(cmd.Key, cmd.Field, previousValue).Result()
+		if err != nil {
+			return result, err
+		}
+	case "VALUE":
+		result, err = client.HSet(cmd.Key, cmd.Field, cmd.Value).Result()
+		if err != nil {
+			return result, err
+		}
+	}
+	return result, nil
+}
+
+// ExecSets ...
+func ExecSets(client *redis.Client, cmd *Command, msg *kafka.Message, previousValue interface{}) (interface{}, error) {
+	var result interface{}
+	var err error
+	switch (*cmd).From {
+	case "SELF":
+		result, err = client.Set(cmd.Key, msg.Value, 0).Result()
+		if err != nil {
+			return result, err
+		}
+	case "PREVIOS_VALUE":
+		result, err = client.Set(cmd.Key, previousValue, 0).Result()
+		if err != nil {
+			return result, err
+		}
+	case "VALUE":
+		result, err = client.Set(cmd.Key, cmd.Value, 0).Result()
+		if err != nil {
+			return result, err
+		}
+	}
+	return result, nil
+}
+
+// ExecuteLedisCmds ...
+func ExecuteLedisCmds(client *redis.Client, cmds *[]Command, msg *kafka.Message) error {
+	var result interface{}
+	var err error
+	for _, cmd := range *cmds {
+		switch cmd.Group {
+		case "LISTS":
+			result, err = ExecList(client, &cmd, msg, result)
+			if err != nil {
+				return err
+			}
+		case "HASHES":
+			result, err = ExecHash(client, &cmd, msg, result)
+			if err != nil {
+				return err
+			}
+		case "SETS":
+			result, err = ExecSets(client, &cmd, msg, result)
+			if err != nil {
+				return err
+			}
+		case "SORTEDSETS":
+			result, err = client.ZIncrBy(cmd.Key, 1, cmd.Value).Result()
+			if err != nil {
+				return err
+			}
+		}
 	}
 	return nil
 }

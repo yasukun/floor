@@ -68,12 +68,12 @@ func main() {
 	wg := &sync.WaitGroup{}
 	for i := 0; i < conf.Kafka.Partitions; i++ {
 		if err := lib.SetOffsetNX(client, conf.Kafka.Topic, i); err != nil {
-			log.Fatalln("set offset if not exist error: ", err)
+			log.Printf("set offset if not exist error: %v\n", err)
 		}
 		wg.Add(1)
 		go func(conf lib.Config, client *redis.Client, partition int) {
 			if err := lib.ReadKafka(conf, client, codec, partition); err != nil {
-				log.Println("kafka read error:", err)
+				log.Printf("kafka read error: %v\n", err)
 			}
 			wg.Done()
 		}(conf, client, i)
