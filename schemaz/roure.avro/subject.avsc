@@ -75,6 +75,18 @@
 							"default": "NONE"
 						},
 						{
+							"name": "from",
+							"type": {
+								"type": "enum",
+								"name": "where",
+								"symbols": [
+									"SELF",
+									"PREVIOUS_VALUE",
+									"VALUE"
+								]
+							}
+						},
+						{
 							"name": "value",
 							"type": "string",
 							"default": "NONE"

@@ -4,6 +4,7 @@ type Command struct {
 	Group string `json:"group"`
 	Key   string `json:"key"`
 	Field string `json:"field"`
+	From  string `json:"from"`
 	Value string `json:"value"`
 }
 

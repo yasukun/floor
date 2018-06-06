@@ -3,6 +3,7 @@ package lib
 import (
 	"errors"
 	"fmt"
+	"log"
 	"strconv"
 
 	"github.com/go-redis/redis"
@@ -47,102 +48,162 @@ func SetOffset(client *redis.Client, topic string, partition int, offset int64) 
 }
 
 // ExecList ...
-func ExecList(client *redis.Client, cmd *Command, msg *kafka.Message, previousValue interface{}) (interface{}, error) {
+func ExecList(conf Config, client *redis.Client, cmd *Command, msg *kafka.Message, previousValue interface{}) (interface{}, error) {
 	var result interface{}
 	var err error
+	if conf.Main.Debug {
+		log.Printf("[RPush] key: %s\n", cmd.Key)
+	}
 	switch (*cmd).From {
 	case "SELF":
+		if conf.Main.Debug {
+			log.Printf("[RPush] value(self): %s\n", msg.Value)
+		}
 		result, err = client.RPush(cmd.Key, msg.Value).Result()
 		if err != nil {
 			return result, err
 		}
-	case "PREVIOS_VALUE":
+	case "PREVIOUS_VALUE":
+		if conf.Main.Debug {
+			log.Printf("[RPush] value(previous value): %s\n", previousValue)
+		}
 		result, err = client.RPush(cmd.Key, previousValue).Result()
 		if err != nil {
 			return result, err
 		}
 	case "VALUE":
+		if conf.Main.Debug {
+			log.Printf("[RPush] value(value): %s\n", cmd.Value)
+		}
 		result, err = client.RPush(cmd.Key, cmd.Value).Result()
 		if err != nil {
 			return result, err
 		}
+	default:
+		log.Printf("[RPush] command no match: %s\n", cmd.From)
+	}
+	if conf.Main.Debug {
+		log.Printf("[RPush] result: %v\n", result)
 	}
 	return result, nil
 }
 
 // ExecHash ...
-func ExecHash(client *redis.Client, cmd *Command, msg *kafka.Message, previousValue interface{}) (interface{}, error) {
+func ExecHash(conf Config, client *redis.Client, cmd *Command, msg *kafka.Message, previousValue interface{}) (interface{}, error) {
 	var result interface{}
 	var err error
+	if conf.Main.Debug {
+		log.Printf("[HSet] key: %s, field: %s\n", cmd.Key, cmd.Field)
+	}
 	switch (*cmd).From {
 	case "SELF":
+		if conf.Main.Debug {
+			log.Printf("[Hset] value(self): %s\n", msg.Value)
+		}
 		result, err = client.HSet(cmd.Key, cmd.Field, msg.Value).Result()
 		if err != nil {
 			return result, err
 		}
-	case "PREVIOS_VALUE":
+	case "PREVIOUS_VALUE":
+		if conf.Main.Debug {
+			log.Printf("[Hset] value(previos value): %v\n", previousValue)
+		}
 		result, err = client.HSet(cmd.Key, cmd.Field, previousValue).Result()
 		if err != nil {
 			return result, err
 		}
 	case "VALUE":
+		if conf.Main.Debug {
+			log.Printf("[Hset] value(value): %s\n", cmd.Value)
+		}
 		result, err = client.HSet(cmd.Key, cmd.Field, cmd.Value).Result()
 		if err != nil {
 			return result, err
 		}
+	default:
+		log.Printf("[Hset] command no match: %s\n", cmd.From)
+	}
+	if conf.Main.Debug {
+		log.Printf("[Hset] result: %v\n", result)
 	}
 	return result, nil
 }
 
 // ExecSets ...
-func ExecSets(client *redis.Client, cmd *Command, msg *kafka.Message, previousValue interface{}) (interface{}, error) {
+func ExecSets(conf Config, client *redis.Client, cmd *Command, msg *kafka.Message, previousValue interface{}) (interface{}, error) {
 	var result interface{}
 	var err error
+	if conf.Main.Debug {
+		log.Printf("[Set] key: %s\n", cmd.Key)
+	}
 	switch (*cmd).From {
 	case "SELF":
+		if conf.Main.Debug {
+			log.Printf("[Set] value(self): %s\n", msg.Value)
+		}
 		result, err = client.Set(cmd.Key, msg.Value, 0).Result()
 		if err != nil {
 			return result, err
 		}
-	case "PREVIOS_VALUE":
+	case "PREVIOUS_VALUE":
+		if conf.Main.Debug {
+			log.Printf("[Set] value(previos value): %v\n", previousValue)
+		}
 		result, err = client.Set(cmd.Key, previousValue, 0).Result()
 		if err != nil {
 			return result, err
 		}
 	case "VALUE":
+		if conf.Main.Debug {
+			log.Printf("[Set] value(value): %s\n", cmd.Value)
+		}
 		result, err = client.Set(cmd.Key, cmd.Value, 0).Result()
 		if err != nil {
 			return result, err
 		}
+	default:
+		log.Printf("[Set] command no match: %s\n", cmd.From)
+	}
+	if conf.Main.Debug {
+		log.Printf("[Set] result: %v\n", result)
 	}
 	return result, nil
 }
 
 // ExecuteLedisCmds ...
-func ExecuteLedisCmds(client *redis.Client, cmds *[]Command, msg *kafka.Message) error {
+func ExecuteLedisCmds(conf Config, client *redis.Client, cmds *[]Command, msg *kafka.Message) error {
 	var result interface{}
 	var err error
 	for _, cmd := range *cmds {
+		if conf.Main.Debug {
+			log.Printf("[ledisdb] cmd: %s\n", cmd.Group)
+		}
 		switch cmd.Group {
 		case "LISTS":
-			result, err = ExecList(client, &cmd, msg, result)
+			result, err = ExecList(conf, client, &cmd, msg, result)
 			if err != nil {
 				return err
 			}
 		case "HASHES":
-			result, err = ExecHash(client, &cmd, msg, result)
+			result, err = ExecHash(conf, client, &cmd, msg, result)
 			if err != nil {
 				return err
 			}
 		case "SETS":
-			result, err = ExecSets(client, &cmd, msg, result)
+			result, err = ExecSets(conf, client, &cmd, msg, result)
 			if err != nil {
 				return err
 			}
 		case "SORTEDSETS":
+			if conf.Main.Debug {
+				log.Printf("[ZIncrBy] key: %s, value(value):%s\n", cmd.Key, cmd.Value)
+			}
 			result, err = client.ZIncrBy(cmd.Key, 1, cmd.Value).Result()
 			if err != nil {
 				return err
+			}
+			if conf.Main.Debug {
+				log.Printf("[ZIncrBy] result: %v\n", result)
 			}
 		}
 	}

@@ -89,11 +89,8 @@ func ReadKafka(conf Config, client *redis.Client, codec *goavro.Codec, partition
 		if err != nil {
 			return err
 		}
-		if conf.Main.Debug {
-			log.Printf("cmds: %s, body: %s\n", cmds, m.Value)
-		}
 
-		if err = ExecuteLedisCmds(client, &cmds, &m); err != nil {
+		if err = ExecuteLedisCmds(conf, client, &cmds, &m); err != nil {
 			return err
 		}
 	}
