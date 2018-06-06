@@ -1,0 +1,17 @@
+[subject]
+limit = 100
+schema = "roure.avro/subject.avsc"
+topic = "roure.avro.subject"
+partition = 3
+ack = 0
+write_timeout = 3
+
+[kafka]
+
+[[kafka.broker]]
+addr = "localhost:9092"
+
+[ledisdb]
+addr = "localhost:6380"
+password = ""
+db = 0
