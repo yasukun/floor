@@ -75,10 +75,7 @@ func newSubject(c echo.Context) error {
 		cc.Logger().Errorf("Bind error: %v", err)
 		return err
 	}
-	cc.Logger().Infof("bind: %v", s)
 	category := cc.Param("category")
-
-	cc.Logger().Infof("category: %s", category)
 	req := cc.Request()
 	host := req.Header.Get("X-Forwarded-For")
 
@@ -103,5 +100,7 @@ func Routes(e *echo.Echo) {
 	r := e.Group("/api")
 	r.GET("/latest/subject/:category", latestSubject)
 	r.GET("/subject/:category/:xid", detailSubject)
+	r.POST("/subject/search/:category/:xid", searchSubject)
+	r.GET("/offset/:filter", searchOffset)
 	r.POST("/subject/:category", newSubject)
 }

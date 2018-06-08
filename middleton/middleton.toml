@@ -4,9 +4,13 @@ schema = "roure.avro/subject.avsc"
 topic = "roure.avro.subject"
 partition = 3
 ack = 0
-write_timeout = 3
 
 [kafka]
+minbytes = 10000
+maxbytes =10000000
+cancel = 2
+maxwait = 2
+write_timeout = 2
 
 [[kafka.broker]]
 addr = "localhost:9092"

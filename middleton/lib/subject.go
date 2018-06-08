@@ -20,7 +20,7 @@ func subjectWriter(conf Config) *kafka.Writer {
 		Topic:        conf.Subject.Topic,
 		Balancer:     &kafka.Hash{},
 		RequiredAcks: conf.Subject.Ack,
-		WriteTimeout: time.Duration(conf.Subject.WriteTimeout) * time.Second,
+		WriteTimeout: time.Duration(conf.Kafka.WriteTimeout) * time.Second,
 	})
 	return w
 }

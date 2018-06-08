@@ -9,16 +9,20 @@ type Config struct {
 }
 
 type MetaConfig struct {
-	Limit        int    `toml:"limit"`
-	Schema       string `toml:"schema"`
-	Topic        string `toml:"topic"`
-	Partition    int    `toml:"partition"`
-	Ack          int    `toml:"ack"`
-	WriteTimeout int    `toml:"write_timeout"`
+	Limit     int    `toml:"limit"`
+	Schema    string `toml:"schema"`
+	Topic     string `toml:"topic"`
+	Partition int    `toml:"partition"`
+	Ack       int    `toml:"ack"`
 }
 
 type KafkaConfig struct {
-	Brokers []Broker `toml:"broker"`
+	Minbytes     int      `toml:"minbytes"`
+	Maxbytes     int      `toml:"maxbytes"`
+	Cancel       int      `toml:"cancel"`
+	MaxWait      int      `toml:"maxwait"`
+	WriteTimeout int      `toml:"write_timeout"`
+	Brokers      []Broker `toml:"broker"`
 }
 
 type Broker struct {
