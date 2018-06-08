@@ -6,7 +6,6 @@ type Config struct {
 	Main    MainConfig    `toml:"main"`
 	Kafka   KafkaConfig   `toml:"kafka"`
 	Ledisdb LedisdbConfig `toml:"ledisdb"`
-	Avro    AvroConfig    `toml:"avro"`
 }
 
 type MainConfig struct {
@@ -15,12 +14,16 @@ type MainConfig struct {
 }
 
 type KafkaConfig struct {
-	Topic      string   `toml:"topic"`
-	Schema     string   `toml:"schema"`
-	Partitions int      `toml:"partitions"`
-	Minbytes   int      `toml:"minbytes"`
-	Maxbytes   int      `toml:"maxbytes"`
-	Brokers    []Broker `toml:"broker"`
+	Topics  []TopicConfig `toml:"topic"`
+	Brokers []Broker      `toml:"broker"`
+}
+
+type TopicConfig struct {
+	Topic      string `toml:"topic"`
+	AvroSchema string `toml:"avro_schema"`
+	Partitions int    `toml:"partitions"`
+	Minbytes   int    `toml:"minbytes"`
+	Maxbytes   int    `toml:"maxbytes"`
 }
 
 type Broker struct {
@@ -31,10 +34,6 @@ type LedisdbConfig struct {
 	Addr     string `toml:"addr"`
 	Password string `toml:"password"`
 	DB       int    `toml:"db"`
-}
-
-type AvroConfig struct {
-	Schema string `toml:"schema"`
 }
 
 // DecodeConfigToml ...

@@ -56,33 +56,33 @@ func CommandExtraction(codec *goavro.Codec, msg *kafka.Message) (cmds []Command,
 }
 
 // ReadKafka ...
-func ReadKafka(conf Config, client *redis.Client, codec *goavro.Codec, partition int) error {
+func ReadKafka(ctx context.Context, conf Config, client *redis.Client, codec *goavro.Codec, topic TopicConfig, partition int) error {
 	brokers := []string{}
 	for _, broker := range conf.Kafka.Brokers {
 		brokers = append(brokers, broker.Addr)
 	}
 	r := kafka.NewReader(kafka.ReaderConfig{
 		Brokers:   brokers,
-		Topic:     conf.Kafka.Topic,
+		Topic:     topic.Topic,
 		Partition: partition,
-		MinBytes:  conf.Kafka.Minbytes,
-		MaxBytes:  conf.Kafka.Maxbytes,
+		MinBytes:  topic.Minbytes,
+		MaxBytes:  topic.Maxbytes,
 	})
 	defer r.Close()
 
-	offset, err := Offset(client, conf.Kafka.Topic, partition)
+	offset, err := Offset(client, topic.Topic, partition)
 	if err != nil {
 		return err
 	}
 	r.SetOffset(offset)
 
 	for {
-		m, err := r.ReadMessage(context.Background())
+		m, err := r.ReadMessage(ctx)
 		if err != nil {
 			return err
 		}
 
-		if err = SetOffset(client, conf.Kafka.Topic, partition, m.Offset+1); err != nil {
+		if err = SetOffset(client, topic.Topic, partition, m.Offset+1); err != nil {
 			log.Println("update offset error: ", err)
 		}
 		cmds, err := CommandExtraction(codec, &m)

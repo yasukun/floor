@@ -1,11 +1,13 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"log"
 	"os"
-	"sync"
+
+	"os/signal"
 
 	"github.com/go-redis/redis"
 	"github.com/linkedin/goavro"
@@ -19,18 +21,28 @@ func Usage() {
 	fmt.Fprint(os.Stderr, "\n")
 }
 
-// setCodec ...
-func setCodec(conf lib.Config) (*goavro.Codec, error) {
+type Codecs struct {
+	Conf lib.Config
+}
+
+// (c Codecs) Get ...
+func (c Codecs) Get(topicName string) (*goavro.Codec, error) {
 	var codec *goavro.Codec
-	schema, err := Asset(conf.Avro.Schema)
-	if err != nil {
-		return codec, err
+	for _, topic := range c.Conf.Kafka.Topics {
+		if topic.Topic == topicName {
+			schema, err := Asset(topic.AvroSchema)
+			if err != nil {
+				return codec, err
+			}
+			codec, err = goavro.NewCodec(string(schema))
+			if err != nil {
+				return codec, err
+			}
+			return codec, nil
+		}
 	}
-	codec, err = goavro.NewCodec(string(schema))
-	if err != nil {
-		return codec, err
-	}
-	return codec, nil
+
+	return codec, fmt.Errorf("schema(%s) not found", topicName)
 }
 
 func main() {
@@ -48,10 +60,7 @@ func main() {
 		log.Fatalln("decode config error", err)
 	}
 
-	codec, err := setCodec(conf)
-	if err != nil {
-		log.Fatalln("avro codec error: ", err)
-	}
+	codecs := Codecs{Conf: conf}
 
 	client := redis.NewClient(&redis.Options{
 		Addr:     conf.Ledisdb.Addr,
@@ -64,20 +73,35 @@ func main() {
 		log.Fatalln("ledisdb ping: ", err)
 	}
 	log.Printf("ledisdb ping: %s", pong)
+	log.Println("laidback start")
 
-	wg := &sync.WaitGroup{}
-	for i := 0; i < conf.Kafka.Partitions; i++ {
-		if err := lib.SetOffsetNX(client, conf.Kafka.Topic, i); err != nil {
-			log.Printf("set offset if not exist error: %v\n", err)
-		}
-		wg.Add(1)
-		go func(conf lib.Config, client *redis.Client, partition int) {
-			if err := lib.ReadKafka(conf, client, codec, partition); err != nil {
-				log.Printf("kafka read error: %v\n", err)
+	ctx := context.Background()
+	ctx, cancel := context.WithCancel(ctx)
+	for _, topic := range conf.Kafka.Topics {
+		for i := 0; i < topic.Partitions; i++ {
+			if err := lib.SetOffsetNX(client, topic.Topic, i); err != nil {
+				log.Printf("set offset if not exist error (topic=%s): %v\n", topic.Topic, err)
 			}
-			wg.Done()
-		}(conf, client, i)
+			go func(ctx context.Context, conf lib.Config, client *redis.Client, topic lib.TopicConfig, partition int) {
+				log.Printf("  spawn listener (topic: %s partition: %d)\n", topic.Topic, partition)
+				codec, err := codecs.Get(topic.Topic)
+				if err != nil {
+					log.Fatalln("take codec error: ", err)
+				}
+				if err := lib.ReadKafka(ctx, conf, client, codec, topic, partition); err != nil {
+					log.Printf("kafka read error: %v\n", err)
+				}
+			}(ctx, conf, client, topic, i)
+		}
 	}
-	wg.Wait()
+	quit := make(chan os.Signal)
+	signal.Notify(quit, os.Interrupt)
+	<-quit
+	cancel()
+	select {
+	case <-ctx.Done():
+		log.Println("laidback stop:", ctx.Err())
+	}
+
 	os.Exit(0)
 }

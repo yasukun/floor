@@ -3,16 +3,16 @@ update_offset_wait = 3
 debug = true
 
 [kafka]
+
+[[kafka.topic]]
 topic = "roure.avro.subject"
+avro_schema = "roure.avro/subject.avsc"
 partitions = 3
 minbytes = 10000
 maxbytes =10000000
 
 [[kafka.broker]]
 addr = "localhost:9092"
-
-[avro]
-schema = "roure.avro/subject.avsc"
 
 [ledisdb]
 addr = "localhost:6380"
