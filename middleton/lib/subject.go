@@ -2,6 +2,7 @@ package lib
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/linkedin/goavro"
@@ -9,8 +10,8 @@ import (
 	kafka "github.com/segmentio/kafka-go"
 )
 
-// subjectWriter ...
-func subjectWriter(conf Config) *kafka.Writer {
+// newSubjectWriter ...
+func newSubjectWriter(conf Config) *kafka.Writer {
 	brokers := []string{}
 	for _, broker := range conf.Kafka.Brokers {
 		brokers = append(brokers, broker.Addr)
@@ -40,13 +41,17 @@ func newSubjectMsg(codec *goavro.Codec, category, host string, subject *Subject)
 		Key:   SubjectKey(category),
 		From:  "SELF",
 		Value: "",
-	})
-	cmds = append(cmds, Command{
+	}, Command{
 		Group: "HASHES",
 		Key:   SubjectKey(category),
 		Field: SubjectDetailKey(guid.String()),
 		From:  "PREVIOUS_VALUE",
 		Value: "",
+	}, Command{
+		Group: "ZADD",
+		Key:   SubjectKey(category),
+		From:  "VALUE",
+		Value: guid.String(),
 	})
 	subject.Redis = cmds
 	if subject.Images == nil {

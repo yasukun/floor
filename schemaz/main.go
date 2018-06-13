@@ -49,6 +49,13 @@ func NewSubject() Subject {
 	imgs := []Image{}
 	imgs = append(imgs, Image{Src: "http://imgur.com/test.jpg"})
 
+	og := Og{
+		Url:         "http://newssite.com",
+		Type:        "image.jpeg",
+		Description: "description",
+		Sitename:    "sitename",
+	}
+
 	uts := time.Now().Unix()
 	subject := Subject{
 		Id:          guid.String(),
@@ -58,7 +65,7 @@ func NewSubject() Subject {
 		Host:        "127.0.0.1",
 		FingerPrint: "12345",
 		Body:        "main message",
-		Url:         "http://google.co.jp",
+		Opengraph:   og,
 		Redis:       cmds,
 		Tags:        tags,
 		Images:      imgs,
@@ -169,10 +176,22 @@ func NewTestSubjectData(category string, target int) Subject {
 		From:  "PREVIOUS_VALUE",
 		Value: "",
 	})
+	cmds = append(cmds, Command{
+		Group: "ZADD",
+		Key:   fmt.Sprintf(keyFormat, category),
+		From:  "VALUE",
+		Value: guid.String(),
+	})
 	tags := []Tag{}
 	tags = append(tags, Tag{Name: "zatsudan"})
 	imgs := []Image{}
 	imgs = append(imgs, Image{Src: "http://imgur.com/test.jpg"})
+	og := Og{
+		Url:         "http://newssite.com",
+		Type:        "image.jpeg",
+		Description: "description",
+		Sitename:    "sitename",
+	}
 	subject := Subject{
 		Id:          guid.String(),
 		Category:    category,
@@ -181,7 +200,7 @@ func NewTestSubjectData(category string, target int) Subject {
 		Host:        "127.0.0.1",
 		FingerPrint: "12345",
 		Body:        msgs[target],
-		Url:         "http://google.co.jp",
+		Opengraph:   og,
 		Redis:       cmds,
 		Tags:        tags,
 		Images:      imgs,
@@ -242,8 +261,8 @@ func main() {
 	subject := flag.Bool("subject", false, "insert subject")
 	kafka := flag.String("kafka", "localhost:9092", "kafka addr")
 	ledis := flag.String("ledis", "localhost:6380", "ledisdb addr")
-	datasize := flag.Int("size", 1000, "size of test data")
-  flag.Parse()
+	datasize := flag.Int("size", 100, "size of test data")
+	flag.Parse()
 
 	client := redis.NewClient(&redis.Options{
 		Addr:     *ledis,
@@ -252,13 +271,13 @@ func main() {
 	})
 
 	if *flush {
-    log.Println("flush db")
+		log.Println("flush db")
 		client.FlushAll()
-    os.Exit(0)
+		os.Exit(0)
 	}
 
 	if *subject {
-    log.Println("write test data")
+		log.Println("write test data")
 		if err := WriteSubject(*kafka, *datasize); err != nil {
 			log.Fatalln(err)
 		}

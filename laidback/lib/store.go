@@ -194,16 +194,30 @@ func ExecuteLedisCmds(conf Config, client *redis.Client, cmds *[]Command, msg *k
 			if err != nil {
 				return err
 			}
-		case "SORTEDSETS":
+    case "ZINCRBY":
 			if conf.Main.Debug {
-				log.Printf("[ZIncrBy] key: %s, value(value):%s\n", cmd.Key, cmd.Value)
+				log.Printf("[ZINCRBY] key: %s, value(value):%s\n", cmd.Key, cmd.Value)
 			}
+
 			result, err = client.ZIncrBy(cmd.Key, 1, cmd.Value).Result()
 			if err != nil {
 				return err
 			}
 			if conf.Main.Debug {
 				log.Printf("[ZIncrBy] result: %v\n", result)
+			}
+		case "ZADD":
+			if conf.Main.Debug {
+				log.Printf("[ZAdd] key: %s, score 1, value(value):%s\n", cmd.Key, cmd.Value)
+			}
+
+			result, err = client.ZAdd(cmd.Key, redis.Z{Score: float64(1), Member: cmd.Value}).Result()
+
+			if err != nil {
+				return err
+			}
+			if conf.Main.Debug {
+				log.Printf("[ZAdd] result: %v\n", result)
 			}
 		}
 	}

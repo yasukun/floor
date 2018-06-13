@@ -34,9 +34,48 @@
 			"default": "NONE"
 		},
 		{
-			"name": "url",
-			"type": "string",
-			"default": "NONE"
+		  "name": "opengraph",
+			"type": {
+			  "type": "record",
+				"name": "og",
+			  "fields": [
+			    {
+					  "name": "url",
+						"type": "string",
+						"default": "NONE"
+					},
+					{
+						"name": "type",
+						"type": "string",
+						"default": "NONE"
+					},
+					{
+						"name": "image",
+						"type": "string",
+						"default": "NONE"
+					},
+					{
+						"name": "description",
+						"type": "string",
+						"default": "NONE"
+					},
+					{
+						"name": "determiner",
+						"type": "string",
+						"default": "NONE"
+					},
+					{
+						"name": "sitename",
+						"type": "string",
+						"default": "NONE"
+					},
+					{
+						"name": "video",
+						"type": "string",
+						"default": "NONE"
+					}
+				]
+			}
 		},
 		{
 			"name": "body",
@@ -59,7 +98,8 @@
 								"symbols": [
 									"LISTS",
 									"SETS",
-									"SORTEDSETS",
+									"ZADD",
+									"ZINCRBY",
 									"HASHES"
 								]
 							}

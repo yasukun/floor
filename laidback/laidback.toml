@@ -11,6 +11,20 @@ partitions = 3
 minbytes = 10000
 maxbytes =10000000
 
+[[kafka.topic]]
+topic = "roure.avro.comment"
+avro_schema = "roure.avro/comment.avsc"
+partitions = 3
+minbytes = 10000
+maxbytes =10000000
+
+[[kafka.topic]]
+topic = "roure.avro.activity"
+avro_schema = "roure.avro/activity.avsc"
+partitions = 2
+minbytes = 10000
+maxbytes =10000000
+
 [[kafka.broker]]
 addr = "localhost:9092"
 

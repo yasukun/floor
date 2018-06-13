@@ -85,7 +85,7 @@ func newSubject(c echo.Context) error {
 		return err
 	}
 
-	w := subjectWriter(cc.Config)
+	w := newSubjectWriter(cc.Config)
 	defer w.Close()
 	if err := w.WriteMessages(context.Background(), msg); err != nil {
 		cc.Logger().Errorf("write kafka error: %v", err)
@@ -98,9 +98,9 @@ func newSubject(c echo.Context) error {
 // Routes ...
 func Routes(e *echo.Echo) {
 	r := e.Group("/api")
-	r.GET("/latest/subject/:category", latestSubject)
 	r.GET("/subject/:category/:xid", detailSubject)
+  r.POST("/subject/:category", newSubject)
+	r.GET("/subject/latest/:category", latestSubject)
 	r.POST("/subject/search/:category/:xid", searchSubject)
 	r.GET("/offset/:filter", searchOffset)
-	r.POST("/subject/:category", newSubject)
 }

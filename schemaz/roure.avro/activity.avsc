@@ -1,20 +1,10 @@
 {
 	"type": "record",
 	"namespace": "roure.avro",
-	"name": "comment",
+	"name": "activity",
 	"fields": [
 		{
-			"name": "subjectid",
-			"type": "string",
-			"default": "NONE"
-		},
-		{
 			"name": "id",
-			"type": "string",
-			"default": "NONE"
-		},
-		{
-			"name": "replyid",
 			"type": "string",
 			"default": "NONE"
 		},
@@ -35,11 +25,6 @@
 		},
 		{
 			"name": "fingerprint",
-			"type": "string",
-			"default": "NONE"
-		},
-		{
-			"name": "body",
 			"type": "string",
 			"default": "NONE"
 		},

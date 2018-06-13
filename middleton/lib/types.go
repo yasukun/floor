@@ -16,6 +16,16 @@ type Image struct {
 	Src string `json:"src"`
 }
 
+type Og struct {
+	Url         string `json:"url"`
+	Type        string `json:"type"`
+	Image       string `json:"image"`
+	Description string `json:"description"`
+	Determiner  string `json:"determiner"`
+	Sitename    string `json:"sitename"`
+	Video       string `json:"video"`
+}
+
 type Subject struct {
 	Id          string    `json:"id"`
 	Category    string    `json:"category"`
@@ -24,7 +34,7 @@ type Subject struct {
 	Host        string    `json:"host"`
 	FingerPrint string    `json:"fingerprint"`
 	Body        string    `json:"body"`
-	Url         string    `json:"url"`
+	Opengraph   Og        `json:"opengraph"`
 	Redis       []Command `json:"redis"`
 	Tags        []Tag     `json:"tags"`
 	Images      []Image   `json:"images"`
