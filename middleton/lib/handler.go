@@ -1,21 +1,16 @@
 package lib
 
 import (
-	"context"
-	"encoding/json"
-	"errors"
-	"fmt"
-	"net/http"
-
-	"strconv"
-
 	"github.com/go-redis/redis"
 	"github.com/labstack/echo"
 	"github.com/linkedin/goavro"
 )
 
 type Codecs struct {
-	Subject *goavro.Codec
+	Subject  *goavro.Codec
+	Comment  *goavro.Codec
+	Activity *goavro.Codec
+	Metainfo *goavro.Codec
 }
 
 type CustomContext struct {
@@ -25,82 +20,40 @@ type CustomContext struct {
 	Codecs
 }
 
-// latestSubject ...
-func latestSubject(c echo.Context) error {
-	cc := c.(*CustomContext)
-	k := SubjectKey(cc.Param("category"))
-	limit := int64(cc.Config.Subject.Limit)
-	subjects, err := cc.Client.LRange(k, limit*-1, -1).Result()
-	if err != nil {
-		return errors.New(fmt.Sprintf("laitest subject error: %v", err))
-	}
-	s, err := responseSubject(cc.Codecs.Subject, &subjects)
-	if err != nil {
-		return errors.New(fmt.Sprintf("build subject response error: %v", err))
-	}
-	cc.Response().Header().Set(echo.HeaderContentType, echo.MIMEApplicationJSONCharsetUTF8)
-	cc.Response().WriteHeader(http.StatusOK)
-
-	return json.NewEncoder(c.Response()).Encode(s)
-}
-
-// detailSubject ...
-func detailSubject(c echo.Context) error {
-	cc := c.(*CustomContext)
-	k := SubjectKey(cc.Param("category"))
-	f := SubjectDetailKey(cc.Param("xid"))
-	size, err := cc.Client.HGet(k, f).Result()
-	if err != nil {
-		return errors.New(fmt.Sprintf("detail subject size error: %v", err))
-	}
-	i64, err := strconv.ParseInt(size, 10, 64)
-	idx := i64 - 1
-	detail, err := cc.Client.LIndex(k, idx).Result()
-	if err != nil {
-		return errors.New(fmt.Sprintf("detail subject error: %v", err))
-	}
-	native, _, err := cc.Codecs.Subject.NativeFromBinary([]byte(detail))
-	if err != nil {
-		return errors.New(fmt.Sprintf("decode detail subject error: %v", err))
-	}
-	return cc.JSON(http.StatusOK, native)
-}
-
-// newSubject ...
-func newSubject(c echo.Context) error {
-	cc := c.(*CustomContext)
-	s := new(Subject)
-	cc.Logger().Info("newsubject")
-	if err := cc.Bind(s); err != nil {
-		cc.Logger().Errorf("Bind error: %v", err)
-		return err
-	}
-	category := cc.Param("category")
-	req := cc.Request()
-	host := req.Header.Get("X-Forwarded-For")
-
-	msg, resp, err := newSubjectMsg(cc.Codecs.Subject, category, host, s)
-	if err != nil {
-		cc.Logger().Errorf("create subject msg error: %v", err)
-		return err
-	}
-
-	w := newSubjectWriter(cc.Config)
-	defer w.Close()
-	if err := w.WriteMessages(context.Background(), msg); err != nil {
-		cc.Logger().Errorf("write kafka error: %v", err)
-		return err
-	}
-	return cc.JSON(http.StatusOK, resp)
-
+// llen ...
+func llen(client *redis.Client, key string) (i64 int64, err error) {
+	i64, err = client.LLen(key).Result()
+	return
 }
 
 // Routes ...
 func Routes(e *echo.Echo) {
 	r := e.Group("/api")
-	r.GET("/subject/:category/:xid", detailSubject)
-  r.POST("/subject/:category", newSubject)
+
+	// category & tag
+	r.GET("/meta/:type/list", listMetainfo)
+
+	// subject
+	r.GET("/subject/len/:category", lenSubject)
+	r.GET("/subject/detail/:category/:xid", detailSubject)
 	r.GET("/subject/latest/:category", latestSubject)
+	r.GET("/subject/index/:category/:xid", indexSubject)
+	r.GET("/subject/len/:subject_id", lenSubject)
+	r.POST("/subject/new/:category", newSubject)
+	r.POST("/subject/range/:category", rangeSubject)
 	r.POST("/subject/search/:category/:xid", searchSubject)
+
+	// kafka
 	r.GET("/offset/:filter", searchOffset)
+
+	// comment
+	r.POST("/comment/detail_byids/:subject_id", detailComments)
+	r.POST("/comment/new/", newComment)
+	r.POST("/comment/range/:subject_id", rangeComment)
+	r.POST("/comment/search/:subject_id", rangeComment)
+
+	// activity
+	r.POST("/activity/favarite/comment/:subject_id/:xid", favComment)
+	r.POST("/activity/inc/view/subject/:category/:xid", subjectInc)
+  r.POST("/activity/favarite/comments/:subject_id", favComments)
 }

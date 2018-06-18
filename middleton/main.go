@@ -35,6 +35,33 @@ func SelectCodec(name string) (codec *goavro.Codec, err error) {
 	return
 }
 
+// loadCodecs ...
+func loadCodecs(conf lib.Config) (codecs lib.Codecs, err error) {
+	subjectCodec, err := SelectCodec(conf.Subject.Schema)
+	if err != nil {
+		return
+	}
+	commentCodec, err := SelectCodec(conf.Comment.Schema)
+	if err != nil {
+		return
+	}
+	activityCodec, err := SelectCodec(conf.Activity.Schema)
+	if err != nil {
+		return
+	}
+	metainfoCodec, err := SelectCodec(conf.Metainfo.Schema)
+	if err != nil {
+		return
+	}
+	codecs = lib.Codecs{
+		Subject:  subjectCodec,
+		Comment:  commentCodec,
+		Activity: activityCodec,
+		Metainfo: metainfoCodec,
+	}
+	return
+}
+
 func main() {
 	flag.Usage = Usage
 	addr := flag.String("addr", ":1323", "listen to server address")
@@ -47,12 +74,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	subjectCodec, err := SelectCodec(conf.Subject.Schema)
+	codecs, err := loadCodecs(conf)
 	if err != nil {
-		log.Printf("select codec error %v\n", err)
+		log.Printf("load codec error %v\n", err)
 		os.Exit(1)
 	}
-	codecs := lib.Codecs{Subject: subjectCodec}
 
 	client := redis.NewClient(&redis.Options{
 		Addr:     conf.Ledisdb.Addr,

@@ -5,6 +5,23 @@ topic = "roure.avro.subject"
 partition = 3
 ack = 0
 
+[activity]
+limit = 100
+schema = "roure.avro/activity.avsc"
+topic = "roure.avro.activity"
+partition = 2
+ack = 0
+
+[comment]
+limit = 100
+schema = "roure.avro/comment.avsc"
+topic = "roure.avro.comment"
+partition = 3
+ack = 0
+
+[metainfo]
+schema = "roure.avro/metainfo.avsc"
+
 [kafka]
 minbytes = 10000
 maxbytes =10000000

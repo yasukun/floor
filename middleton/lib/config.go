@@ -3,9 +3,12 @@ package lib
 import "github.com/BurntSushi/toml"
 
 type Config struct {
-	Subject MetaConfig    `toml:"subject"`
-	Kafka   KafkaConfig   `toml:"kafka"`
-	Ledisdb LedisdbConfig `toml:"ledisdb"`
+	Subject  MetaConfig    `toml:"subject"`
+	Activity MetaConfig    `toml:"activity"`
+	Comment  MetaConfig    `toml:"comment"`
+	Metainfo MetaConfig    `toml:"metainfo"`
+	Kafka    KafkaConfig   `toml:"kafka"`
+	Ledisdb  LedisdbConfig `toml:"ledisdb"`
 }
 
 type MetaConfig struct {
