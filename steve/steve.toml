@@ -1,0 +1,14 @@
+[ledisdb]
+addr = "localhost:6380"
+password = ""
+db = 0
+
+[[plugin.metainfo]]
+path = "./plugins/metainfo.so"
+conf_path = "./steve.toml"
+schedule = "@every 60s"
+
+[metainfo]
+categories = "./data/categories.csv"
+tags = "./data/tags.csv"
+schema ="roure.avro/metainfo.avsc"
