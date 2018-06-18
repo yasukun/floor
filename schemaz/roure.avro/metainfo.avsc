@@ -1,0 +1,37 @@
+{
+	"type": "record",
+	"namespace": "roure.avro",
+	"name": "metainfo",
+	"fields": [
+		{
+			"name": "id",
+			"type": "string",
+			"default": "NONE"
+		},
+		{
+		  "name": "synonyms",
+			"type": "array",
+			"items": {
+				"name": "synonym",
+			  "type": "record",
+				"fields": [
+				  {
+				    "name": "name",
+						"type": "string",
+						"default": "NONE"
+					},
+					{
+					  "name": "locales",
+						"type": {
+						  "type": "enum",
+							"name": "locale",
+							"symbols": [
+							  "ja"
+							]
+						}
+					}
+				]
+			}
+		}
+	]
+}
