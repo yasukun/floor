@@ -1,9 +1,13 @@
 package lib
 
 import (
+	"fmt"
+	"net/http"
+
 	"github.com/go-redis/redis"
 	"github.com/labstack/echo"
 	"github.com/linkedin/goavro"
+	ogclient "github.com/yasukun/ogcache-server/client"
 )
 
 type Codecs struct {
@@ -26,12 +30,34 @@ func llen(client *redis.Client, key string) (i64 int64, err error) {
 	return
 }
 
+// openGraph ...
+func openGraph(c echo.Context) error {
+	cc := c.(*CustomContext)
+	url := new(URL)
+	if err := cc.Bind(url); err != nil {
+		return cc.JSON(http.StatusBadRequest, ErrResponse{
+			Message: fmt.Sprintf("bind URL error: %v", err),
+		})
+	}
+
+	og, err := ogclient.RunClient(cc.Config.Ogcache.Addr, cc.Config.Ogcache.Proto, cc.Config.Ogcache.Buffered, cc.Config.Ogcache.Framed, cc.Config.Ogcache.Secure, url.Addr)
+	if err != nil {
+		return cc.JSON(http.StatusBadRequest, ErrResponse{
+			Message: fmt.Sprintf("ogcache error: %v", err),
+		})
+	}
+	return cc.JSON(http.StatusOK, og)
+}
+
 // Routes ...
 func Routes(e *echo.Echo) {
 	r := e.Group("/api")
 
 	// category & tag
-	r.GET("/meta/:type/list", listMetainfo)
+	r.GET("/meta/:type/:locale/list", listMetainfo)
+
+	// opengraph
+	r.POST("/opengraph", openGraph)
 
 	// subject
 	r.GET("/subject/len/:category", lenSubject)
@@ -55,5 +81,5 @@ func Routes(e *echo.Echo) {
 	// activity
 	r.POST("/activity/favarite/comment/:subject_id/:xid", favComment)
 	r.POST("/activity/inc/view/subject/:category/:xid", subjectInc)
-  r.POST("/activity/favarite/comments/:subject_id", favComments)
+	r.POST("/activity/favarite/comments/:subject_id", favComments)
 }
