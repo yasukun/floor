@@ -9,6 +9,15 @@ type Config struct {
 	Metainfo MetaConfig    `toml:"metainfo"`
 	Kafka    KafkaConfig   `toml:"kafka"`
 	Ledisdb  LedisdbConfig `toml:"ledisdb"`
+	Ogcache  OgcacheConfig `toml:"ogcache"`
+}
+
+type OgcacheConfig struct {
+	Addr     string `toml:"addr"`
+	Proto    string `toml:"proto"`
+	Buffered bool   `toml:"buffered"`
+	Framed   bool   `toml:"framed"`
+	Secure   bool   `toml:"secure"`
 }
 
 type MetaConfig struct {

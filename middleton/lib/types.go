@@ -63,6 +63,10 @@ type PostRange struct {
 	Stop  int64 `json:"stop"`
 }
 
+type URL struct {
+	Addr string `json:"addr"`
+}
+
 type PostID struct {
 	ID string `json:"id"`
 }
@@ -96,12 +100,24 @@ type Comment struct {
 
 type Synonym struct {
 	Name   string `json:"name"`
+	Index  string `json:"index"`
 	Locale string `json:"locale"`
 }
 
 type Metainfo struct {
 	ID       string    `json:"id"`
-	Synonyms []Synonym `json:"synonym"`
+	Synonyms []Synonym `json:"synonyms"`
+}
+
+type MtIndexCell struct {
+	Name       string `json:"name"`
+	CategoryID string `json:"category_id"`
+}
+
+type MtIndexList struct {
+	Index string        `json:"index"`
+	Order int           `json:"order"`
+	Cells []MtIndexCell `json:"cells"`
 }
 
 type Rank struct {

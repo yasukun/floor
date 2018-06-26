@@ -36,3 +36,10 @@ addr = "localhost:9092"
 addr = "localhost:6380"
 password = ""
 db = 0
+
+[ogcache]
+addr = "localhost:9091"
+proto = "binary"
+buffered = false
+framed = false
+secure =false
